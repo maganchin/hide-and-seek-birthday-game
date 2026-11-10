@@ -2,6 +2,8 @@
 
 A cozy, Roblox-style 3D world you make for someone's birthday. Their friends' video messages are hidden all over a little archipelago of floating islands, and the birthday person walks around finding them all. Once every message is found, a cake with one candle per year rises on the meadow in the middle and sky lanterns float up.
 
+**▶ Play the demo: [hide-and-seek-birthday-game.vercel.app](https://hide-and-seek-birthday-game.vercel.app)**
+
 ![The title screen](docs/title.png)
 
 - **Made for gifting:** one config file holds the name, age, islands, messages, pets and music.
@@ -11,7 +13,7 @@ A cozy, Roblox-style 3D world you make for someone's birthday. Their friends' vi
 
 ![A setup tip hidden in the world](docs/tip.png)
 
-## Try it
+## Run it yourself
 
 ```bash
 git clone https://github.com/maganchin/hide-and-seek-birthday-game.git
