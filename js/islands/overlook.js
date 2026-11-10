@@ -158,7 +158,7 @@ export function buildOverlook(scene) {
       b.sphere(0.04, GOLD, s2 * 0.08, 1.2, 0.06, { matrix: dm, ao: false });
     }
     // the outfits hanging inside (one in each colour from the wardrobe)
-    ['#4a7c8b', '#1c2440', '#e2783e', '#1e2a5a', '#5a6048', '#2440b8'].forEach((c, k) => {
+    ['#f2866b', '#f6c94e', '#9aa3ad', '#e86aa8', '#1a1a1e', '#4a6fa8'].forEach((c, k) => {
       const hx = -0.75 + k * 0.3;
       b.cyl(0.005, 0.005, 0.12, 3, '#c8c0b0', hx, 2.03, 0.18, { matrix: mtx, ao: false });
       b.add(new THREE.ConeGeometry(0.16, 1.05, 6, 1, true), c, hx, 1.45, 0.18, { matrix: mtx, ao: false });

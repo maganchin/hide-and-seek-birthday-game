@@ -27,7 +27,7 @@ birthdayPerson: {
   name: 'Alex',
   age: 25,                                  // candles on the cake
   look: { skin: '#e0b08a', hair: '#3a2418' },
-  outfit: 'party',                          // party, gown, robe, graduation, street, velvet
+  outfit: 'casual',                         // casual, sundress, hoodie, party, graduation, overalls
 },
 ```
 

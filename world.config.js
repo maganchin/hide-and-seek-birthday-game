@@ -15,7 +15,7 @@ export default {
       skin: '#efcfb6',       // any CSS colour
       hair: '#2a1d18',
     },
-    outfit: 'party',         // starting outfit: party, gown, robe, graduation, street, velvet
+    outfit: 'casual',        // starting outfit: casual, sundress, hoodie, party, graduation, overalls
   },
 
   // ── 2. The words on screen ────────────────────────────────────────────────

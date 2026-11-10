@@ -5,44 +5,7 @@ import * as THREE from 'three';
 import { toonMat, softDot } from './kit.js';
 import { PERSON } from './content.js';
 
-const SKIN = PERSON.look.skin || '#efcfb6', HAIR = PERSON.look.hair || '#1b1719', NAVY = '#1f3552';
-
-// teal silk with navy peonies and leafy branches, painted once
-function partyTexture() {
-  const c = document.createElement('canvas');
-  c.width = 512; c.height = 512;
-  const g = c.getContext('2d');
-  const grd = g.createLinearGradient(0, 0, 512, 0);
-  grd.addColorStop(0, '#4a7c8b'); grd.addColorStop(0.5, '#5a8f9d'); grd.addColorStop(1, '#4a7c8b');
-  g.fillStyle = grd; g.fillRect(0, 0, 512, 512);
-  // silk sheen streaks
-  for (let i = 0; i < 40; i++) { g.strokeStyle = `rgba(200,235,240,${0.04 + Math.random() * 0.06})`; g.lineWidth = 2 + Math.random() * 6; const x = Math.random() * 512; g.beginPath(); g.moveTo(x, 0); g.bezierCurveTo(x + 20, 170, x - 20, 340, x + 10, 512); g.stroke(); }
-  let seed = 7;
-  const r = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  // leafy branches
-  g.strokeStyle = NAVY; g.fillStyle = NAVY;
-  for (let i = 0; i < 26; i++) {
-    const x = r() * 512, y = r() * 512, a = r() * Math.PI * 2;
-    g.lineWidth = 3; g.globalAlpha = 0.85;
-    g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + Math.cos(a) * 30, y + Math.sin(a) * 30 - 10, x + Math.cos(a) * 60, y + Math.sin(a) * 60); g.stroke();
-    for (let k = 0; k < 4; k++) {
-      const t = (k + 1) / 5, lx = x + Math.cos(a) * 60 * t, ly = y + Math.sin(a) * 60 * t;
-      g.beginPath(); g.ellipse(lx + Math.cos(a + 1.3) * 8, ly + Math.sin(a + 1.3) * 8, 9, 4, a + 1.3, 0, Math.PI * 2); g.fill();
-    }
-  }
-  // peonies
-  for (let i = 0; i < 22; i++) {
-    const x = r() * 512, y = r() * 512, rad = 14 + r() * 16;
-    g.globalAlpha = 0.9;
-    for (let p = 0; p < 6; p++) { const a = p / 6 * Math.PI * 2 + r(); g.beginPath(); g.ellipse(x + Math.cos(a) * rad * 0.55, y + Math.sin(a) * rad * 0.55, rad * 0.55, rad * 0.38, a, 0, Math.PI * 2); g.fill(); }
-    g.fillStyle = '#2c4a6c'; g.beginPath(); g.arc(x, y, rad * 0.3, 0, 7); g.fill(); g.fillStyle = NAVY;
-  }
-  g.globalAlpha = 1;
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  return t;
-}
+const SKIN = PERSON.look.skin || '#efcfb6', HAIR = PERSON.look.hair || '#1b1719';
 
 // painted fabrics for the wardrobe outfits
 function fabric(draw, rep = [2, 1]) {
@@ -53,52 +16,55 @@ function fabric(draw, rep = [2, 1]) {
 }
 const rnd = (() => { let s = 11; return () => ((s = (s * 16807) % 2147483647) / 2147483647); })();
 const FABRICS = {
-  gown: () => fabric((g, n) => { g.fillStyle = '#1c2440'; g.fillRect(0, 0, n, n); g.strokeStyle = 'rgba(120,170,200,0.35)'; g.lineWidth = 2; for (let i = 0; i < 60; i++) { const x = rnd() * n, y = rnd() * n, a = rnd() * 6; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * 18, y + Math.sin(a) * 18); g.stroke(); } }),
-  robe: () => fabric((g, n) => { const gr = g.createLinearGradient(0, 0, 0, n); gr.addColorStop(0, '#f4c9a8'); gr.addColorStop(0.45, '#e2783e'); gr.addColorStop(1, '#c4542a'); g.fillStyle = gr; g.fillRect(0, 0, n, n); g.strokeStyle = 'rgba(255,236,200,0.45)'; g.lineWidth = 3; for (let i = 0; i < 18; i++) { const x = rnd() * n; g.beginPath(); g.moveTo(x, 0); g.bezierCurveTo(x + 14, n * 0.3, x - 14, n * 0.6, x + 6, n); g.stroke(); } g.fillStyle = 'rgba(232,190,90,0.8)'; for (let i = 0; i < 10; i++) { g.beginPath(); g.ellipse(rnd() * n, rnd() * n * 0.35, 10, 4, rnd() * 3, 0, 7); g.fill(); } }, [3, 1]),
-  silk: () => fabric((g, n) => { g.fillStyle = '#e8b89a'; g.fillRect(0, 0, n, n); for (let i = 0; i < 40; i++) { g.fillStyle = ['#f0a060', '#7aa0d8', '#c8a0d8', '#f6dcc0', '#4a70b0'][i % 5]; g.globalAlpha = 0.6; g.beginPath(); g.ellipse(rnd() * n, rnd() * n, 8 + rnd() * 26, 4 + rnd() * 10, rnd() * 3, 0, 7); g.fill(); } g.globalAlpha = 1; }),
-  hood: () => fabric((g, n) => { g.fillStyle = '#8a2a3a'; g.fillRect(0, 0, n, n); for (let i = 0; i < 50; i++) { g.fillStyle = rnd() < 0.5 ? '#3a6ad0' : '#6a8ae0'; g.beginPath(); g.arc(rnd() * n, rnd() * n, 4 + rnd() * 12, 0, 7); g.fill(); } }),
+  // sunny yellow with white polka dots
+  dots: () => fabric((g, n) => { g.fillStyle = '#f6c94e'; g.fillRect(0, 0, n, n); g.fillStyle = '#fffaf0'; for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) { g.beginPath(); g.arc((x + (y % 2) * 0.5) * n / 8, (y + 0.5) * n / 8, 6, 0, 7); g.fill(); } }, [3, 2]),
+  // party sequins: pink and lilac with little sparkles
+  sequins: () => fabric((g, n) => { const gr = g.createLinearGradient(0, 0, n, n); gr.addColorStop(0, '#e86aa8'); gr.addColorStop(1, '#9a6ae0'); g.fillStyle = gr; g.fillRect(0, 0, n, n); for (let i = 0; i < 260; i++) { g.fillStyle = `rgba(255,255,255,${0.15 + rnd() * 0.5})`; g.beginPath(); g.arc(rnd() * n, rnd() * n, 1.5 + rnd() * 2.5, 0, 7); g.fill(); } }, [2, 2]),
+  // a breton stripe tee
+  stripes: () => fabric((g, n) => { g.fillStyle = '#fbf8f2'; g.fillRect(0, 0, n, n); g.fillStyle = '#2f4a8a'; for (let y = 0; y < n; y += 32) g.fillRect(0, y, n, 13); }, [1, 2]),
 };
 
 // the outfits in the wardrobe on the Overlook
 export const OUTFITS = {
-  party:      { name: 'Floral party dress', blurb: 'Teal silk with navy flowers',     swatch: '#4a7c8b' },
-  gown:       { name: 'Concert gown',       blurb: 'Midnight silk for a night out',   swatch: '#1c2440' },
-  robe:       { name: 'Phoenix robe',       blurb: 'Golden crown and flowing sleeves', swatch: 'linear-gradient(#f4c9a8, #e2783e, #c4542a)' },
-  graduation: { name: 'Graduation day',     blurb: 'Robes, cap and hood',              swatch: 'linear-gradient(135deg, #1e2a5a 0 55%, #8a2a3a 55% 75%, #7a5ab8 75%)' },
-  street:     { name: 'Street style',       blurb: 'Olive cape, silk top, tan tote',   swatch: 'linear-gradient(135deg, #5a6048 0 50%, #e8b89a 50% 75%, #b8642a 75%)' },
-  velvet:     { name: 'Blue velvet',        blurb: 'Velvet dress, scarf, tall boots',  swatch: 'linear-gradient(135deg, #2440b8 0 65%, #6a2ac0 65%)' },
+  casual:     { name: 'T-shirt & jeans',    blurb: 'A comfy everyday classic',        swatch: 'linear-gradient(135deg, #f2866b 0 55%, #4a6fa8 55%)' },
+  sundress:   { name: 'Sundress',           blurb: 'Yellow with white polka dots',    swatch: 'radial-gradient(circle at 30% 30%, #fffaf0 0 12%, #f6c94e 14%)' },
+  hoodie:     { name: 'Hoodie & joggers',   blurb: 'Cozy day off',                    swatch: 'linear-gradient(135deg, #9aa3ad 0 60%, #3a3e48 60%)' },
+  party:      { name: 'Party dress',        blurb: 'Sparkly sequins for the big day', swatch: 'linear-gradient(135deg, #e86aa8, #9a6ae0)' },
+  graduation: { name: 'Graduation day',     blurb: 'Gown, cap and a gold tassel',     swatch: 'linear-gradient(135deg, #1a1a1e 0 75%, #e8b45a 75%)' },
+  overalls:   { name: 'Overalls',           blurb: 'Denim over a striped tee',        swatch: 'linear-gradient(135deg, #4a6fa8 0 60%, #fbf8f2 60% 75%, #2f4a8a 75%)' },
 };
 
-export function buildAvatar(outfitId = 'party') {
-  const O = OUTFITS[outfitId] ? outfitId : 'party';
+export function buildAvatar(outfitId = 'casual') {
+  const O = OUTFITS[outfitId] ? outfitId : 'casual';
   const root = new THREE.Group();
   const body = new THREE.Group();      // bobs while walking
   root.add(body);
   const m = (c, o = {}) => toonMat({ color: c, ...o });
   const add = (parent, geo, mat, x = 0, y = 0, z = 0) => { const me = new THREE.Mesh(geo, mat); me.position.set(x, y, z); me.castShadow = true; parent.add(me); return me; };
   const lathe = (pts, mat, parent = body, seg = 24, open = null) => add(parent, open ? new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), seg, open[0], open[1]) : new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), seg), mat);
-  const skin = m(SKIN), slide = m('#141214');
+  const skin = m(SKIN), slide = m('#c8955f');
 
-  // ── legs: bare with slides, hidden under a long skirt, wide trousers, or tall boots ──
-  const legKind = { party: 'slides', gown: 'hidden', robe: 'hidden', graduation: 'hidden', street: 'trousers', velvet: 'boots' }[O];
+  // ── legs: trousers (jeans / joggers) with sneakers, bare with sandals, tall boots, or hidden under a gown ──
+  const legKind = { casual: 'trousers', sundress: 'sandals', hoodie: 'trousers', party: 'boots', graduation: 'hidden', overalls: 'trousers' }[O];
+  const trouserCol = { casual: '#4a6fa8', hoodie: '#3a3e48', overalls: '#4a6fa8' }[O];
+  const sneaker = m('#f6f4ef'), sole = m('#d8d2c6');
   const legs = [-1, 1].map((s) => {
     const pivot = new THREE.Group(); pivot.position.set(s * 0.075, 0.42, 0); root.add(pivot);
     if (legKind === 'trousers') {
-      const olive = m('#5a6048');
-      add(pivot, new THREE.CylinderGeometry(0.07, 0.095, 0.42, 10), olive, 0, -0.21, 0);
-      add(pivot, new THREE.BoxGeometry(0.008, 0.4, 0.01), m('#d8b25a'), s * 0.09, -0.21, 0);
-      add(pivot, new THREE.BoxGeometry(0.1, 0.03, 0.2), slide, 0, -0.415, 0.03);
+      add(pivot, new THREE.CylinderGeometry(0.06, 0.07, 0.4, 10), m(trouserCol), 0, -0.2, 0);
+      add(pivot, new THREE.BoxGeometry(0.11, 0.07, 0.21), sneaker, 0, -0.395, 0.03);
+      add(pivot, new THREE.BoxGeometry(0.115, 0.025, 0.22), sole, 0, -0.425, 0.03);
     } else {
       add(pivot, new THREE.CylinderGeometry(0.042, 0.036, 0.38, 8), skin, 0, -0.2, 0);
       if (legKind === 'boots') {
-        const boot = m('#121012');
-        add(pivot, new THREE.CylinderGeometry(0.05, 0.048, 0.3, 10), boot, 0, -0.26, 0);
+        const boot = m('#f4f1ec');
+        add(pivot, new THREE.CylinderGeometry(0.05, 0.048, 0.22, 10), boot, 0, -0.3, 0);
         add(pivot, new THREE.BoxGeometry(0.11, 0.07, 0.22), boot, 0, -0.39, 0.03);
-        add(pivot, new THREE.BoxGeometry(0.12, 0.03, 0.23), m('#2a2628'), 0, -0.42, 0.03);
+        add(pivot, new THREE.BoxGeometry(0.12, 0.03, 0.23), m('#c8c0b4'), 0, -0.42, 0.03);
       } else {
         add(pivot, new THREE.SphereGeometry(0.05, 8, 6), skin, 0, -0.39, 0.03).scale.set(0.9, 0.5, 1.6);
         add(pivot, new THREE.BoxGeometry(0.1, 0.03, 0.2), slide, 0, -0.415, 0.03);
-        add(pivot, new THREE.BoxGeometry(0.105, 0.035, 0.07), slide, 0, -0.385, 0.06);
+        add(pivot, new THREE.BoxGeometry(0.105, 0.035, 0.03), slide, 0, -0.385, 0.06);
       }
     }
     pivot.visible = legKind !== 'hidden';
@@ -106,65 +72,50 @@ export function buildAvatar(outfitId = 'party') {
   });
 
   // ── the garment ──
-  let dress, sleeve = null, sleeveStyle = 'bare';
-  if (O === 'party') {
-    const tex = partyTexture(); tex.repeat.set(2, 1);
-    const dressMat = m('#ffffff', { map: tex });
-    dress = lathe([[0.17, 0.3], [0.19, 0.34], [0.2, 0.55], [0.19, 0.72], [0.155, 0.84], [0.17, 0.96], [0.19, 1.04], [0.17, 1.12], [0.075, 1.16]], dressMat, body, 22);
-    add(body, new THREE.BoxGeometry(0.03, 0.2, 0.05), skin, -0.185, 0.42, 0.02).rotation.z = -0.05;
-    add(body, new THREE.CylinderGeometry(0.068, 0.078, 0.085, 14), dressMat, 0, 1.19, 0);
-    add(body, new THREE.TorusGeometry(0.073, 0.008, 4, 16), m(NAVY), 0, 1.235, 0).rotation.x = Math.PI / 2;
-    const pearl = m('#fbf6ee', { emissive: '#3a3630' });
-    for (const [x, y, z] of [[0, 1.2, 0.08], [0.06, 1.12, 0.15], [0.12, 1.07, 0.13], [0.165, 1.0, 0.09], [0.17, 0.82, 0.08]]) add(body, new THREE.SphereGeometry(0.018, 8, 6), pearl, x, y, z);
-  } else if (O === 'gown') {
-    const gm = m('#ffffff', { map: FABRICS.gown(), side: THREE.DoubleSide });
-    dress = lathe([[0.36, 0.01], [0.34, 0.2], [0.29, 0.45], [0.23, 0.66], [0.17, 0.74], [0.155, 0.84], [0.17, 0.96], [0.185, 1.06], [0.15, 1.13], [0.075, 1.17]], gm, body, 26);
-    lathe([[0.27, 0.66], [0.24, 0.72], [0.18, 0.78], [0.165, 0.8]], m('#26304e', { side: THREE.DoubleSide }), body, 26);   // the peplum
-    add(body, new THREE.CylinderGeometry(0.07, 0.08, 0.06, 14), gm, 0, 1.18, 0);
-  } else if (O === 'robe') {
-    const hm = m('#ffffff', { map: FABRICS.robe(), side: THREE.DoubleSide });
-    dress = lathe([[0.42, 0.01], [0.38, 0.2], [0.3, 0.5], [0.2, 0.74], [0.16, 0.84], [0.175, 0.96], [0.19, 1.04], [0.17, 1.08]], hm, body, 28);
-    // gold phoenix embroidery across the bodice, a sheer overskirt
-    for (let k = 0; k < 7; k++) { const a = -0.9 + k * 0.3; add(body, new THREE.SphereGeometry(0.04, 8, 6), m('#e8b45a', { emissive: '#3a2400' }), Math.sin(a) * 0.185, 0.98 + Math.cos(k) * 0.03, Math.cos(a) * 0.185).scale.set(1, 0.5, 0.4); }
-    lathe([[0.46, 0.04], [0.4, 0.3], [0.26, 0.62], [0.2, 0.76]], m('#fbe4d4', { transparent: true, opacity: 0.45, side: THREE.DoubleSide }), body, 28);
-    add(body, new THREE.TorusGeometry(0.17, 0.02, 6, 20), m('#c8542a'), 0, 0.78, 0).rotation.x = Math.PI / 2;   // sash
+  let dress;
+  const top = (mat) => lathe([[0.19, 0.5], [0.185, 0.62], [0.165, 0.8], [0.18, 0.96], [0.19, 1.04], [0.17, 1.12], [0.075, 1.16]], mat, body, 22);
+  if (O === 'casual') {
+    dress = top(m('#f2866b'));
+    lathe([[0.19, 0.4], [0.195, 0.52]], m('#4a6fa8'), body, 22);                          // jeans waistband
+    add(body, new THREE.CylinderGeometry(0.068, 0.078, 0.06, 14), m('#f2866b'), 0, 1.18, 0);
+  } else if (O === 'sundress') {
+    const dm = m('#ffffff', { map: FABRICS.dots(), side: THREE.DoubleSide });
+    dress = lathe([[0.26, 0.36], [0.24, 0.5], [0.19, 0.7], [0.16, 0.82], [0.17, 0.96], [0.18, 1.06], [0.15, 1.12]], dm, body, 24);
+    for (const sx of [-1, 1]) add(body, new THREE.BoxGeometry(0.03, 0.12, 0.03), dm, sx * 0.1, 1.15, 0.03);   // straps
+  } else if (O === 'hoodie') {
+    const hm = m('#9aa3ad');
+    dress = lathe([[0.2, 0.46], [0.2, 0.56], [0.18, 0.8], [0.195, 0.96], [0.2, 1.04], [0.18, 1.12], [0.08, 1.16]], hm, body, 22);
+    add(body, new THREE.TorusGeometry(0.15, 0.06, 8, 16, Math.PI), hm, 0, 1.13, -0.1).rotation.x = Math.PI / 2 + 0.35;   // the hood, down
+    add(body, new THREE.BoxGeometry(0.22, 0.1, 0.03), m('#8a939d'), 0, 0.7, 0.18);                                          // front pocket
+    for (const sx of [-1, 1]) add(body, new THREE.CylinderGeometry(0.006, 0.006, 0.16, 4), m('#f6f4ef'), sx * 0.04, 1.03, 0.19); // drawstrings
+  } else if (O === 'party') {
+    const pm = m('#ffffff', { map: FABRICS.sequins(), side: THREE.DoubleSide });
+    dress = lathe([[0.27, 0.42], [0.25, 0.52], [0.18, 0.7], [0.155, 0.82], [0.17, 0.96], [0.19, 1.04], [0.17, 1.12], [0.075, 1.16]], pm, body, 24);
+    add(body, new THREE.CylinderGeometry(0.068, 0.078, 0.05, 14), pm, 0, 1.18, 0);
   } else if (O === 'graduation') {
-    dress = lathe([[0.2, 0.04], [0.2, 0.3], [0.19, 0.6], [0.16, 0.8], [0.17, 0.96], [0.18, 1.06], [0.16, 1.12], [0.075, 1.17]], m('#7a5ab8'), body, 22);
-    // the navy robe, open down the front
-    lathe([[0.3, 0.03], [0.28, 0.4], [0.24, 0.8], [0.22, 1.02], [0.2, 1.12], [0.1, 1.17]], m('#1e2a5a', { side: THREE.DoubleSide }), body, 24, [0.5, Math.PI * 2 - 1.0]);
-    add(body, new THREE.CylinderGeometry(0.07, 0.08, 0.08, 14), m('#7a5ab8'), 0, 1.19, 0);
-    // the hood: a patterned red-and-blue V over the shoulders with a pale lining
-    lathe([[0.3, 0.86], [0.27, 1.0], [0.2, 1.12], [0.1, 1.18]], m('#ffffff', { map: FABRICS.hood(), side: THREE.DoubleSide }), body, 24, [Math.PI * 0.22, Math.PI * 1.56]);
-    for (const s of [-1, 1]) add(body, new THREE.BoxGeometry(0.04, 0.3, 0.02), m('#f4d8dc'), s * 0.09, 0.98, 0.17).rotation.z = s * 0.45;
-  } else if (O === 'street') {
-    dress = lathe([[0.17, 0.42], [0.175, 0.6], [0.165, 0.8], [0.18, 0.98], [0.19, 1.06], [0.16, 1.13], [0.075, 1.16]], m('#ffffff', { map: FABRICS.silk() }), body, 22);
-    add(body, new THREE.CylinderGeometry(0.068, 0.078, 0.085, 14), m('#2a2628'), 0, 1.19, 0);
-    // the olive cape, open at the front, falling past the knees
-    lathe([[0.36, 0.3], [0.32, 0.6], [0.27, 0.9], [0.22, 1.1], [0.12, 1.2]], m('#5a6048', { side: THREE.DoubleSide }), body, 24, [0.7, Math.PI * 2 - 1.4]);
-  } else if (O === 'velvet') {
-    dress = lathe([[0.2, 0.56], [0.195, 0.66], [0.17, 0.82], [0.18, 0.96], [0.19, 1.04], [0.17, 1.12], [0.075, 1.16]], m('#2440b8'), body, 22);
-    add(body, new THREE.BoxGeometry(0.03, 0.12, 0.05), skin, -0.2, 0.6, 0.02);
-    add(body, new THREE.CylinderGeometry(0.068, 0.078, 0.1, 14), m('#2440b8'), 0, 1.19, 0);
-    // the purple scarf over one shoulder, falling front and back
-    const scarf = m('#6a2ac0');
-    add(body, new THREE.BoxGeometry(0.1, 0.62, 0.025), scarf, 0.1, 0.84, 0.19).rotation.z = 0.12;
-    add(body, new THREE.BoxGeometry(0.1, 0.8, 0.025), scarf, 0.13, 0.74, -0.19).rotation.z = -0.05;
-    add(body, new THREE.TorusGeometry(0.085, 0.03, 6, 14, Math.PI), scarf, 0.13, 1.14, 0).rotation.y = Math.PI / 2;
+    dress = lathe([[0.3, 0.03], [0.28, 0.4], [0.24, 0.8], [0.22, 1.02], [0.2, 1.12], [0.1, 1.17]], m('#1a1a1e', { side: THREE.DoubleSide }), body, 24);
+    add(body, new THREE.CylinderGeometry(0.07, 0.08, 0.08, 14), m('#fbf8f2'), 0, 1.19, 0);                       // collar
+  } else if (O === 'overalls') {
+    dress = top(m('#ffffff', { map: FABRICS.stripes() }));
+    const denim = m('#4a6fa8');
+    lathe([[0.2, 0.4], [0.2, 0.62], [0.19, 0.8]], denim, body, 22);                                            // the dungaree trousers top
+    add(body, new THREE.BoxGeometry(0.22, 0.24, 0.03), denim, 0, 0.9, 0.175);                                    // bib
+    for (const sx of [-1, 1]) {
+      add(body, new THREE.BoxGeometry(0.04, 0.32, 0.02), denim, sx * 0.09, 1.0, 0.0).rotation.x = 0;             // straps over the shoulders
+      add(body, new THREE.SphereGeometry(0.018, 8, 6), m('#e8b45a', { emissive: '#3a2400' }), sx * 0.08, 1.0, 0.19);
+    }
   }
-  sleeve = { gown: null, robe: 'sheer', graduation: 'robe', street: 'silk', velvet: 'velvet' }[O] ?? null;
+  const sleeve = { casual: 'short', hoodie: 'long', graduation: 'wide', overalls: 'short' }[O] ?? null;
 
-  // ── arms, pivot at the shoulder (bare, or in this outfit's sleeves) ──
-  const sleeveMat = { robe: m('#1e2a5a'), silk: m('#2a2628'), velvet: m('#2440b8') }[sleeve];
+  // ── arms, pivot at the shoulder (bare, short sleeves, long sleeves or wide gown sleeves) ──
+  const sleeveMat = { casual: m('#f2866b'), hoodie: m('#9aa3ad'), graduation: m('#1a1a1e'), overalls: m('#ffffff', { map: FABRICS.stripes() }) }[O];
   const arms = [-1, 1].map((s) => {
     const pivot = new THREE.Group(); pivot.position.set(s * 0.2, 1.08, 0); body.add(pivot);
-    add(pivot, new THREE.SphereGeometry(0.048, 10, 8), sleeveMat || skin, 0, -0.01, 0);
-    add(pivot, new THREE.CylinderGeometry(sleeve === 'robe' ? 0.07 : 0.04, sleeve === 'robe' ? 0.09 : 0.033, 0.44, 8), sleeveMat || skin, s * 0.02, -0.24, 0).rotation.z = s * 0.08;
+    const full = sleeve === 'long' || sleeve === 'wide';
+    add(pivot, new THREE.SphereGeometry(0.048, 10, 8), sleeve ? sleeveMat : skin, 0, -0.01, 0);
+    add(pivot, new THREE.CylinderGeometry(sleeve === 'wide' ? 0.07 : 0.04, sleeve === 'wide' ? 0.09 : 0.033, 0.44, 8), full ? sleeveMat : skin, s * 0.02, -0.24, 0).rotation.z = s * 0.08;
+    if (sleeve === 'short') add(pivot, new THREE.CylinderGeometry(0.052, 0.05, 0.14, 8), sleeveMat, s * 0.006, -0.07, 0).rotation.z = s * 0.08;
     add(pivot, new THREE.SphereGeometry(0.04, 8, 6), skin, s * 0.035, -0.48, 0);
-    if (sleeve === 'sheer') {   // long, floaty sleeves that hang below the hand
-      const sh = add(pivot, new THREE.CylinderGeometry(0.06, 0.2, 0.75, 12, 1, true), m('#fbe0cc', { transparent: true, opacity: 0.55, side: THREE.DoubleSide }), s * 0.03, -0.42, 0);
-      sh.rotation.z = s * 0.08;
-      add(pivot, new THREE.TorusGeometry(0.045, 0.012, 6, 12), m('#c8542a'), s * 0.03, -0.12, 0).rotation.x = Math.PI / 2;
-    }
     return pivot;
   });
 
@@ -174,21 +125,16 @@ export function buildAvatar(outfitId = 'party') {
   add(head, new THREE.SphereGeometry(0.25, 20, 16), skin, 0, 0, 0).scale.set(1, 1.02, 0.96);
   // ── hair ──
   const hairMat = m(HAIR);
-  const hairKind = { party: 'pony', gown: 'bun', robe: 'long', graduation: 'bun', street: 'bob', velvet: 'ponyPlain' }[O];
+  const hairKind = { casual: 'pony', sundress: 'long', hoodie: 'bun', party: 'bob', graduation: 'long', overalls: 'pony' }[O];
   const cap = add(head, new THREE.SphereGeometry(0.264, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.6), hairMat, 0, 0.018, -0.015);
   cap.rotation.x = hairKind === 'bob' ? -0.55 : -0.95;
   add(head, new THREE.SphereGeometry(0.256, 16, 12), hairMat, 0, -0.01, -0.1);
   const pony = new THREE.Group(); pony.position.set(0, -0.1, -0.25); head.add(pony);
-  if (hairKind === 'pony' || hairKind === 'ponyPlain') {
+  if (hairKind === 'pony') {
     add(pony, new THREE.SphereGeometry(0.085, 10, 8), hairMat, 0, 0, 0).scale.set(1, 0.9, 0.8);
     add(pony, new THREE.CylinderGeometry(0.05, 0.02, 0.26, 8), hairMat, 0, -0.15, -0.03).rotation.x = 0.25;
   }
-  if (hairKind === 'pony') {
-    const bowMat = m('#0d0b0c');
-    for (const s of [-1, 1]) { const loop = add(pony, new THREE.SphereGeometry(0.05, 8, 6), bowMat, s * 0.06, 0.02, -0.06); loop.scale.set(1.2, 0.7, 0.4); loop.rotation.z = s * 0.4; }
-    add(pony, new THREE.BoxGeometry(0.035, 0.035, 0.03), bowMat, 0, 0.01, -0.07);
-    for (const s of [-1, 1]) add(pony, new THREE.BoxGeometry(0.025, 0.14, 0.01), bowMat, s * 0.025, -0.07, -0.08).rotation.z = s * 0.25;
-  } else if (hairKind === 'bun') {
+  if (hairKind === 'bun') {
     add(pony, new THREE.SphereGeometry(0.1, 12, 10), hairMat, 0, 0.02, 0.02);
   } else if (hairKind === 'long') {
     pony.position.set(0, -0.05, -0.2);
@@ -201,40 +147,16 @@ export function buildAvatar(outfitId = 'party') {
   if (hairKind !== 'bob') for (const s of [-1, 1]) add(head, new THREE.CylinderGeometry(0.016, 0.006, 0.3, 5), hairMat, s * 0.215, -0.04, 0.09).rotation.set(0.15, 0, s * 0.18);
 
   // ── accessories ──
-  const gold = m('#e8b45a', { emissive: '#3a2400' });
-  if (O === 'robe') {  // the golden phoenix crown with dangling tassels
-    const crown = new THREE.Group(); crown.position.set(0, 0.2, -0.02); head.add(crown);
-    add(crown, new THREE.TorusGeometry(0.2, 0.02, 6, 20, Math.PI), gold, 0, 0, 0.02).rotation.x = -0.3;
-    for (let k = 0; k < 9; k++) {
-      const a = -1.2 + k * 0.3, x = Math.sin(a) * 0.2, z = Math.cos(a) * 0.12;
-      add(crown, new THREE.ConeGeometry(0.03, 0.18 + (k % 2) * 0.08, 5), gold, x, 0.1, z).rotation.z = -a * 0.5;
-      add(crown, new THREE.SphereGeometry(0.02, 6, 4), m('#e8504a', { emissive: '#400000' }), x, 0.02, z + 0.02);
-    }
-    add(crown, new THREE.SphereGeometry(0.05, 10, 8), gold, 0, 0.12, 0.12).scale.set(1.6, 1, 0.6);   // the phoenix at the front
-    for (const s of [-1, 1]) for (let k = 0; k < 3; k++) {
-      const strand = add(crown, new THREE.CylinderGeometry(0.005, 0.005, 0.32, 3), gold, s * (0.21 + k * 0.02), -0.2, 0.06 - k * 0.04);
-      add(crown, new THREE.SphereGeometry(0.014, 6, 4), m('#f6d27a', { emissive: '#3a2400' }), s * (0.21 + k * 0.02), -0.37, 0.06 - k * 0.04);
-    }
-    add(head, new THREE.SphereGeometry(0.012, 6, 4), m('#e8504a'), 0, 0.08, 0.245);   // a dot of red on the forehead
-  }
-  if (O === 'graduation') {  // mortarboard with a tassel
+  if (O === 'graduation') {  // mortarboard with a gold tassel
     const mb = new THREE.Group(); mb.position.set(0, 0.24, 0); mb.rotation.x = -0.12; head.add(mb);
     add(mb, new THREE.CylinderGeometry(0.2, 0.22, 0.1, 16), m('#141214'), 0, -0.02, 0);
     add(mb, new THREE.BoxGeometry(0.56, 0.025, 0.56), m('#141214'), 0, 0.04, 0).rotation.y = Math.PI / 4;
-    add(mb, new THREE.SphereGeometry(0.02, 6, 4), m('#141214'), 0, 0.065, 0);
-    add(mb, new THREE.CylinderGeometry(0.008, 0.008, 0.28, 4), m('#1e2a5a'), 0.26, -0.08, 0.1);
+    add(mb, new THREE.SphereGeometry(0.02, 6, 4), m('#e8b45a'), 0, 0.065, 0);
+    add(mb, new THREE.CylinderGeometry(0.01, 0.01, 0.28, 4), m('#e8b45a', { emissive: '#3a2400' }), 0.26, -0.08, 0.1);
   }
-  if (O === 'street') {     // a tan leather tote, in the left hand
-    const tote = new THREE.Group(); tote.position.set(-0.03, -0.62, 0.02); arms[0].add(tote);
-    add(tote, new THREE.BoxGeometry(0.3, 0.26, 0.12), m('#b8642a'), 0, -0.1, 0);
-    add(tote, new THREE.TorusGeometry(0.07, 0.012, 4, 12, Math.PI), m('#9a5020'), 0, 0.03, 0);
-    add(tote, new THREE.CylinderGeometry(0.06, 0.06, 0.03, 12), m('#e0a050'), 0.1, -0.1, 0.07).rotation.x = Math.PI / 2;
-  }
-  if (O === 'velvet') {      // a little black bag on the arm, and silver rings
-    const bag = add(arms[0], new THREE.BoxGeometry(0.16, 0.12, 0.07), m('#141214'), -0.02, -0.5, 0.06);
-    add(bag, new THREE.TorusGeometry(0.06, 0.008, 4, 10, Math.PI), m('#141214'), 0, 0.06, 0);
-    add(head, new THREE.SphereGeometry(0.02, 6, 4), m('#d8dde4'), -0.25, -0.08, 0.02);
-    add(head, new THREE.SphereGeometry(0.02, 6, 4), m('#d8dde4'), 0.25, -0.08, 0.02);
+  if (O === 'party') {       // a little party hat
+    const hat = add(head, new THREE.ConeGeometry(0.09, 0.24, 14), m('#f6c94e'), 0.08, 0.3, 0.02); hat.rotation.z = -0.25;
+    add(hat, new THREE.SphereGeometry(0.03, 8, 6), m('#fbf8f2'), 0, 0.13, 0);
   }
 
   // face: eyes with highlights, brows, blush, a soft smile

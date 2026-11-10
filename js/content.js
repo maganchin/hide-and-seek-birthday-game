@@ -5,7 +5,7 @@ import CONFIG from '../world.config.js';
 export { CONFIG };
 
 const P = CONFIG.birthdayPerson || {};
-export const PERSON = { name: P.name || 'Birthday Star', age: Math.max(1, Math.min(99, P.age | 0 || 1)), look: P.look || {}, outfit: P.outfit || 'party' };
+export const PERSON = { name: P.name || 'Birthday Star', age: Math.max(1, Math.min(99, P.age | 0 || 1)), look: P.look || {}, outfit: P.outfit || 'casual' };
 
 const ordinal = (n) => n + ((n % 100 >= 11 && n % 100 <= 13) ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th'));
 // fill in {name}, {age} and {ordinal}
