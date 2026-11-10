@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>Birthday Hide &amp; Seek</title>
+  <meta name="theme-color" content="#f3c9b4">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏝️</text></svg>">
+  <link rel="stylesheet" href="fonts/fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three.module.js", "three/addons/": "./vendor/addons/" } }
+  </script>
+</head>
+<body>
+  <div id="stage"></div>
+  <div id="paper"></div>
+  <div id="vignette"></div>
+
+  <!-- loading -->
+  <div id="loader">
+    <div class="loader-card">
+      <div class="loader-kicker" data-text="kicker"></div>
+      <div class="loader-title" data-text="title"></div>
+      <div class="loader-bar"><i></i></div>
+      <div class="loader-text">Gathering clouds…</div>
+    </div>
+  </div>
+
+  <!-- opening -->
+  <div id="intro" hidden>
+    <div class="twinkles" aria-hidden="true"></div>
+    <div class="intro-inner">
+      <p class="kicker" data-text="kicker"></p>
+      <p class="present">I present to you…</p>
+      <h1><span class="star-l" aria-hidden="true">✦</span><span data-text="title"></span><span class="star-r" aria-hidden="true">✦</span></h1>
+      <p class="premise" data-text="premise"></p>
+      <button id="start" class="btn-primary"><span data-text="startButton"></span> <span aria-hidden="true">→</span></button>
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud" hidden>
+    <button id="counter" class="chip" title="Memories journal">
+      <span class="star" aria-hidden="true">★</span>
+      <span class="count"><b id="found">0</b> / <span id="total">0</span></span>
+      <span class="lbl">Memories Found</span>
+    </button>
+    <button id="hintBtn" class="chip pill" title="Get a hint">✦ Hint</button>
+    <div class="hud-right">
+      <button id="mapBtn" class="chip pill">World Map</button>
+      <div class="sound">
+        <button id="muteBtn" class="chip round" aria-label="Mute music" title="Music on/off">
+          <svg viewBox="0 0 24 24" class="on"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <svg viewBox="0 0 24 24" class="off"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+        <input id="vol" type="range" min="0" max="1" step="0.01" aria-label="Music volume">
+      </div>
+      <button id="settingsBtn" class="chip round" aria-label="Settings" title="Settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="settings" class="popover" hidden>
+    <label class="row"><span>Music volume</span><input type="range" id="vol2" min="0" max="1" step="0.01" aria-label="Music volume"></label>
+    <label class="row"><span>Reduced motion</span><input type="checkbox" id="reducedToggle"></label>
+    <div class="row help">
+      <b>Moving around</b><br>
+      Click or tap the ground to walk · WASD / arrow keys<br>
+      Trackpad: two-finger scroll to look around, pinch to zoom<br>
+      Mouse: drag to look around, scroll wheel to zoom<br>
+      E or tap a glowing light to open it · M for the map
+    </div>
+    <button id="resetBtn" class="link">Reset progress</button>
+  </div>
+
+  <div id="mapLabels"></div>
+  <div id="prompt" hidden><b></b><span></span></div>
+  <div id="banner" hidden><div class="b-title"></div><div class="b-sub"></div></div>
+  <div id="hint" hidden></div>
+  <div id="toast" hidden></div>
+  <div id="fade"></div>
+
+  <!-- mobile joystick -->
+  <div id="joy" hidden><i></i></div>
+
+  <!-- video -->
+  <div id="videoModal" class="modal" hidden>
+    <div class="modal-card video-card" role="dialog" aria-modal="true" aria-labelledby="vTitle">
+      <button class="close" aria-label="Close">×</button>
+      <div class="v-head">
+        <div class="v-eyebrow"></div>
+        <h2 id="vTitle"></h2>
+      </div>
+      <div class="v-frame"><video playsinline controls preload="metadata"></video><div class="v-placeholder" hidden></div></div>
+      <div class="v-foot"><span class="v-status"></span><button class="btn-ghost replay">↺ Watch again</button></div>
+    </div>
+  </div>
+
+  <!-- secret image -->
+  <div id="imageModal" class="modal" hidden>
+    <div class="modal-card image-card" role="dialog" aria-modal="true">
+      <button class="close" aria-label="Close">×</button>
+      <div class="v-eyebrow"></div>
+      <h2></h2>
+      <img alt="">
+    </div>
+  </div>
+
+  <!-- travel -->
+  <div id="travelModal" class="modal" hidden>
+    <div class="modal-card travel-card" role="dialog" aria-modal="true">
+      <button class="close" aria-label="Close">×</button>
+      <div class="v-eyebrow">Sky Gate</div>
+      <h2>Where shall the wind take you?</h2>
+      <div class="dest"></div>
+    </div>
+  </div>
+
+  <!-- cat house -->
+  <div id="catModal" class="modal" hidden>
+    <div class="modal-card travel-card cat-card" role="dialog" aria-modal="true">
+      <button class="close" aria-label="Close">×</button>
+      <div class="v-eyebrow">The Cat House</div>
+      <h2 data-text="catQuestion"></h2>
+      <div class="dest cat-list"></div>
+    </div>
+  </div>
+
+  <!-- wardrobe -->
+  <div id="wardrobeModal" class="modal" hidden>
+    <div class="modal-card travel-card cat-card" role="dialog" aria-modal="true">
+      <button class="close" aria-label="Close">×</button>
+      <div class="v-eyebrow" data-text="wardrobe"></div>
+      <h2>What are we wearing today?</h2>
+      <div class="dest cat-list"></div>
+    </div>
+  </div>
+
+  <!-- journal -->
+  <div id="journalModal" class="modal" hidden>
+    <div class="modal-card journal-card" role="dialog" aria-modal="true">
+      <button class="close" aria-label="Close">×</button>
+      <div class="v-eyebrow">Memories journal</div>
+      <h2 class="j-title"></h2>
+      <div class="j-list"></div>
+    </div>
+  </div>
+
+  <!-- finale -->
+  <div id="finale" hidden>
+    <div class="f-text">
+      <h2 data-text="finaleTitle"></h2>
+      <p data-text="finaleMessage"></p>
+      <button class="btn-primary" id="keepExploring">Keep exploring</button>
+    </div>
+  </div>
+
+  <noscript><p style="padding:2rem">This little world needs JavaScript turned on.</p></noscript>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
